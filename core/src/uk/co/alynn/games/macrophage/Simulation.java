@@ -146,7 +146,7 @@ public final class Simulation {
         return surroundingEnemies >= 2; // need at least 2 enemies to take over
     }
 
-    private boolean isConnected(int nodeA, int nodeB) {
+    boolean isConnected(int nodeA, int nodeB) {
         for (int i = 0; i < 4; ++i) {
             if (getLink(nodeA, i) == nodeB)
                 return true;

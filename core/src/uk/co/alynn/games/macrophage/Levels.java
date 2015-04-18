@@ -36,6 +36,9 @@ public abstract class Levels {
             if (src == dst) {
                 continue;
             }
+            if (sim.isConnected(src, dst)) {
+                continue;
+            }
             if (sim.getLink(src, srcLink) != -1) {
                 continue;
             }

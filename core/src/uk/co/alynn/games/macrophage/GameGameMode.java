@@ -103,7 +103,7 @@ public class GameGameMode implements GameMode {
 
     @Override
     public void activate() {
-        sim = Levels.circleLevel(12, 3);
+        sim = Levels.circleLevel(12, 5);
         if (MathUtils.randomBoolean()) {
             aiTurn = 2.2f;
         }
