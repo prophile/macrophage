@@ -32,4 +32,12 @@ public class LoadingMode implements GameMode {
     public void deactivate() {
     }
 
+    @Override
+    public void mouseMove(int x, int y) {
+    }
+
+    @Override
+    public void mouseClick(int x, int y) {
+    }
+
 }

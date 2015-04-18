@@ -4,7 +4,7 @@ import com.badlogic.gdx.audio.Sound;
 
 public enum SFX {
     CLICK("click", 0.7f),
-    SELECT("select", 0.5f),
+    SELECT("select", 0.02f),
     SLIME_BIRTH("slime-birth", 1.0f),
     SLIME_DEATH("slime-death", 1.0f),
     SLIME_MOVE("slime-move", 1.0f),

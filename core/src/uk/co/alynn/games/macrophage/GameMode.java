@@ -9,4 +9,7 @@ public interface GameMode {
 
     public void activate();
     public void deactivate();
+
+    public void mouseMove(int x, int y);
+    public void mouseClick(int x, int y);
 }

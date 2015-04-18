@@ -21,10 +21,19 @@ public class MenuMode implements GameMode {
 
     @Override
     public void activate() {
+        SFX.SELECT.play();
     }
 
     @Override
     public void deactivate() {
+    }
+
+    @Override
+    public void mouseMove(int x, int y) {
+    }
+
+    @Override
+    public void mouseClick(int x, int y) {
     }
 
 }
