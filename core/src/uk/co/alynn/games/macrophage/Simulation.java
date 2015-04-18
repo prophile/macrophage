@@ -1,6 +1,7 @@
 package uk.co.alynn.games.macrophage;
 
 public final class Simulation {
+    private static final boolean ALLOW_SUICIDE = true;
     private final float[] positions;
     private final int[] states;
     private boolean didBirthVirus;
@@ -98,16 +99,31 @@ public final class Simulation {
     }
 
     public boolean isExtant(Side side) {
+        return countAlive(side) > 0;
+    }
+
+    public boolean anyValidMoves(Side side) {
         for (int i = 0; i < nodeCount(); ++i) {
-            if (isOccupied(i) && getSide(i) == side)
-                return true;
+            if (!isOccupied(i))
+                continue;
+            if (getSide(i) != side)
+                continue;
+            for (int j = 0; j < nodeCount(); ++j) {
+                if (isValidMove(i, j)) {
+                    return true;
+                }
+            }
         }
         return false;
     }
 
     public boolean isValidMove(int nodeA, int nodeB) {
         if (nodeA == nodeB) { // suicide moves
-            return isOccupied(nodeA);
+            if (ALLOW_SUICIDE) {
+                return isOccupied(nodeA) && getSurrounder(nodeA) != getSide(nodeA);
+            } else {
+                return false;
+            }
         }
         if (!isConnected(nodeA, nodeB))
             return false; // unconnected nodes
@@ -143,7 +159,8 @@ public final class Simulation {
             throw new AssertionError("not a valid move!");
         }
         SFX movementFX = null;
-        if (isOccupied(dest) && !isSoftCopy) {
+        boolean destOccupied = isOccupied(dest);
+        if (destOccupied && !isSoftCopy) {
             switch (getSide(dest)) {
             case SLIMES:
                 SFX.SLIME_DEATH.play();
@@ -165,7 +182,18 @@ public final class Simulation {
         if (source != dest) {
             setSide(dest, getSide(source));
         }
-        clearOccupation(source);
+        if (destOccupied) {
+            clearOccupation(source);
+        } else {
+            switch (getSide(dest)) {
+            case SLIMES:
+                setSide(source, Side.VIRUSES);
+                break;
+            case VIRUSES:
+                setSide(source, Side.SLIMES);
+                break;
+            }
+        }
         // drive the automatic updates
         tickSimulation();
         if (!didBirthVirus && !didBirthSlime && movementFX != null && !isSoftCopy)
@@ -173,6 +201,7 @@ public final class Simulation {
     }
 
     public void tickSimulation() {
+        sanityCheckLinks();
         didBirthVirus = false;
         didBirthSlime = false;
         while (runOneTick());
@@ -180,6 +209,31 @@ public final class Simulation {
             SFX.VIRUS_BIRTH.play();
         if (didBirthSlime && !isSoftCopy)
             SFX.SLIME_BIRTH.play();
+    }
+
+    private void sanityCheckLinks() {
+        boolean failures = false;
+        for (int i = 0; i < nodeCount(); ++i) {
+            for (int j = 0; j < nodeCount(); ++j) {
+                boolean forwardLink = isConnected(i, j);
+                boolean reverseLink = isConnected(j, i);
+                if (forwardLink && !reverseLink) {
+                    System.err.println("MISSING LINK: " + j + " -> " + i);
+                    failures = true;
+                }
+                if (!forwardLink && reverseLink) {
+                    System.err.println("MISSING LINK: " + i + " -> " + j);
+                    failures = true;
+                }
+                if ((i == j) && (forwardLink || reverseLink)) {
+                    System.err.println("SELF LINK: " + i);
+                    failures = true;
+                }
+            }
+        }
+        if (failures) {
+            throw new RuntimeException("link table is broke");
+        }
     }
 
     private boolean runOneTick() {

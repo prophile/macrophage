@@ -7,6 +7,9 @@ public abstract class SimAI {
         if (!sim.isExtant(side)) {
             throw new RuntimeException("AI on non-extant side");
         }
+        if (!sim.anyValidMoves(side)) {
+            throw new RuntimeException("AI cannot make a move!");
+        }
         Side opponent;
         switch (side) {
         case SLIMES:
@@ -20,7 +23,7 @@ public abstract class SimAI {
         }
         int baseOurCount = sim.countAlive(side);
         int baseTheirCount = sim.countAlive(opponent);
-        int bestMoveSuperiority = -baseTheirCount;
+        int bestMoveSuperiority = -Integer.MIN_VALUE;
         int bestMoveOurCount = baseOurCount;
         int bestMoveSRC = -1;
         int bestMoveDST = -1;

@@ -3,6 +3,7 @@ package uk.co.alynn.games.macrophage;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
+import com.badlogic.gdx.math.MathUtils;
 
 public class GameGameMode implements GameMode {
     private Simulation sim;
@@ -13,6 +14,8 @@ public class GameGameMode implements GameMode {
     private boolean ai = true;
     private float aiTurn = 0.0f;
     private final float DISTANCE_SQUARED = 44.0f*44.0f;
+
+    private GameMode nxt = null;
 
     @Override
     public void render(SpriteBatch spriteBatch, ShapeRenderer shapeRenderer) {
@@ -69,6 +72,8 @@ public class GameGameMode implements GameMode {
 
     @Override
     public GameMode think(float dt) {
+        if (nxt != null)
+            return nxt;
         Side otherSide = null;
         switch (playerSide) {
         case SLIMES:
@@ -84,6 +89,9 @@ public class GameGameMode implements GameMode {
         if (!sim.isExtant(Side.SLIMES)) {
             return new ConclusionMode(Side.VIRUSES);
         }
+        if (!sim.anyValidMoves(playerSide)) {
+            return new ConclusionMode(otherSide);
+        }
         if (aiTurn > 0.0f) {
             aiTurn -= dt;
             if (aiTurn <= 0.0f) {
@@ -95,7 +103,10 @@ public class GameGameMode implements GameMode {
 
     @Override
     public void activate() {
-        sim = Levels.sketchedLevel();
+        sim = Levels.circleLevel(12, 3);
+        if (MathUtils.randomBoolean()) {
+            aiTurn = 2.2f;
+        }
     }
 
     @Override
@@ -147,6 +158,14 @@ public class GameGameMode implements GameMode {
                 break;
             }
             if (ai) {
+                if (!sim.isExtant(playerSide)) {
+                    // end of game!
+                    nxt = new ConclusionMode(otherSide);
+                } else if (!sim.anyValidMoves(otherSide)) {
+                    // end of game!
+                    System.err.println("AI cannot move!");
+                    nxt = new ConclusionMode(playerSide);
+                }
                 aiTurn = 3.0f;
                 hovering = -1;
             } else {
