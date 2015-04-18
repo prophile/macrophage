@@ -10,7 +10,7 @@ public enum SFX {
     SLIME_MOVE("slime-move", 0.1f),
     UHUH("uhuh", 0.06f),
     VIRUS_BIRTH("virus-birth", 0.03f),
-    VIRUS_DEATH("virus-death", 0.04f),
+    VIRUS_DEATH("virus-death", 0.2f),
     VIRUS_MOVE("virus-move", 0.04f);
 
     public final String filePath;

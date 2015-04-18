@@ -79,7 +79,27 @@ public final class Simulation {
     }
 
     public boolean isValidMove(int nodeA, int nodeB) {
-        return (nodeA != nodeB) && isConnected(nodeA, nodeB);
+        if (nodeA == nodeB)
+            return false; // no null-moves
+        if (!isConnected(nodeA, nodeB))
+            return false; // unconnected nodes
+        if (!isOccupied(nodeA))
+            return false; // can't move from an empty slot
+        if (!isOccupied(nodeB))
+            return true; // moving to empty territory
+        if (getSide(nodeA) == getSide(nodeB))
+            return false; // self-squashing
+        int surroundingEnemies = 0;
+        for (int j = 0; j < 4; ++j) {
+            int link = getLink(nodeB, j);
+            if (link == -1)
+                continue;
+            if (!isOccupied(link))
+                continue;
+            if (getSide(link) != getSide(nodeB))
+                ++surroundingEnemies;
+        }
+        return surroundingEnemies >= 2; // need at least 2 enemies to take over
     }
 
     private boolean isConnected(int nodeA, int nodeB) {
@@ -94,6 +114,7 @@ public final class Simulation {
         if (!isValidMove(source, dest)) {
             throw new AssertionError("not a valid move!");
         }
+        SFX movementFX = null;
         if (isOccupied(dest)) {
             switch (getSide(dest)) {
             case SLIMES:
@@ -106,10 +127,10 @@ public final class Simulation {
         } else {
             switch (getSide(source)) {
             case SLIMES:
-                SFX.SLIME_MOVE.play();
+                movementFX = SFX.SLIME_MOVE;
                 break;
             case VIRUSES:
-                SFX.VIRUS_MOVE.play();
+                movementFX = SFX.VIRUS_MOVE;
                 break;
             }
         }
@@ -117,6 +138,8 @@ public final class Simulation {
         clearOccupation(source);
         // drive the automatic updates
         tickSimulation();
+        if (!didBirthVirus && !didBirthSlime && movementFX != null)
+            movementFX.play();
     }
 
     public void tickSimulation() {
