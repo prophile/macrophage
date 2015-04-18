@@ -5,8 +5,20 @@ public final class Simulation {
     private final int[] states;
     private boolean didBirthVirus;
     private boolean didBirthSlime;
+    private final boolean isSoftCopy;
+
+    public float userdata;
+
+    private Simulation(Simulation source) {
+        positions = source.positions;
+        states = new int[source.states.length];
+        System.arraycopy(source.states, 0, states, 0, states.length);
+        userdata = source.userdata;
+        isSoftCopy = true;
+    }
 
     public Simulation(int nodes) {
+        isSoftCopy = false;
         positions = new float[nodes*2];
         states = new int[nodes];
         for (int i = 0; i < nodes; ++i) {
@@ -14,6 +26,21 @@ public final class Simulation {
             positions[2*i] = 0.0f;
             positions[2*i + 1] = 0.0f;
         }
+    }
+
+    public Simulation softCopy() {
+        return new Simulation(this);
+    }
+
+    public int countAlive(Side side) {
+        int count = 0;
+        for (int i = 0; i < nodeCount(); ++i) {
+            if (!isOccupied(i))
+                continue;
+            if (getSide(i) == side)
+                ++count;
+        }
+        return count;
     }
 
     public float getNodeX(int node) {
@@ -79,8 +106,9 @@ public final class Simulation {
     }
 
     public boolean isValidMove(int nodeA, int nodeB) {
-        if (nodeA == nodeB)
-            return false; // no null-moves
+        if (nodeA == nodeB) { // suicide moves
+            return isOccupied(nodeA);
+        }
         if (!isConnected(nodeA, nodeB))
             return false; // unconnected nodes
         if (!isOccupied(nodeA))
@@ -115,7 +143,7 @@ public final class Simulation {
             throw new AssertionError("not a valid move!");
         }
         SFX movementFX = null;
-        if (isOccupied(dest)) {
+        if (isOccupied(dest) && !isSoftCopy) {
             switch (getSide(dest)) {
             case SLIMES:
                 SFX.SLIME_DEATH.play();
@@ -134,11 +162,13 @@ public final class Simulation {
                 break;
             }
         }
-        setSide(dest, getSide(source));
+        if (source != dest) {
+            setSide(dest, getSide(source));
+        }
         clearOccupation(source);
         // drive the automatic updates
         tickSimulation();
-        if (!didBirthVirus && !didBirthSlime && movementFX != null)
+        if (!didBirthVirus && !didBirthSlime && movementFX != null && !isSoftCopy)
             movementFX.play();
     }
 
@@ -146,9 +176,9 @@ public final class Simulation {
         didBirthVirus = false;
         didBirthSlime = false;
         while (runOneTick());
-        if (didBirthVirus)
+        if (didBirthVirus && !isSoftCopy)
             SFX.VIRUS_BIRTH.play();
-        if (didBirthSlime)
+        if (didBirthSlime && !isSoftCopy)
             SFX.SLIME_BIRTH.play();
     }
 

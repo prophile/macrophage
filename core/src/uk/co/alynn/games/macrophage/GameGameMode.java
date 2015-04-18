@@ -10,7 +10,9 @@ public class GameGameMode implements GameMode {
     private int hovering = -1;
     private Side playerSide = Side.VIRUSES;
 
-    private float DISTANCE_SQUARED = 44.0f*44.0f;
+    private boolean ai = true;
+    private float aiTurn = 0.0f;
+    private final float DISTANCE_SQUARED = 44.0f*44.0f;
 
     @Override
     public void render(SpriteBatch spriteBatch, ShapeRenderer shapeRenderer) {
@@ -67,6 +69,27 @@ public class GameGameMode implements GameMode {
 
     @Override
     public GameMode think(float dt) {
+        Side otherSide = null;
+        switch (playerSide) {
+        case SLIMES:
+            otherSide = Side.VIRUSES;
+            break;
+        case VIRUSES:
+            otherSide = Side.SLIMES;
+            break;
+        }
+        if (!sim.isExtant(Side.VIRUSES)) {
+            return new ConclusionMode(Side.SLIMES);
+        }
+        if (!sim.isExtant(Side.SLIMES)) {
+            return new ConclusionMode(Side.VIRUSES);
+        }
+        if (aiTurn > 0.0f) {
+            aiTurn -= dt;
+            if (aiTurn <= 0.0f) {
+                SimAI.decide(otherSide, sim);
+            }
+        }
         return this;
     }
 
@@ -115,6 +138,8 @@ public class GameGameMode implements GameMode {
 
     @Override
     public void mouseMove(int x, int y) {
+        if (aiTurn > 0.0f)
+            return;
         int nextHovering = -1;
         for (int i = 0; i < sim.nodeCount(); ++i) {
             float nx = sim.getNodeX(i);
@@ -132,6 +157,8 @@ public class GameGameMode implements GameMode {
 
     @Override
     public void mouseClick(int x, int y) {
+        if (aiTurn > 0.0f)
+            return;
         if (selected >= 0 && hovering == -1) {
             selected = -1;
         } else if (selected == -1 && hovering == -1) {
@@ -144,13 +171,20 @@ public class GameGameMode implements GameMode {
         } else if (sim.isValidMove(selected, hovering)) {
             sim.performMove(selected, hovering);
             selected = -1;
+            Side otherSide = null;
             switch (playerSide) {
             case SLIMES:
-                playerSide = Side.VIRUSES;
+                otherSide = Side.VIRUSES;
                 break;
             case VIRUSES:
-                playerSide = Side.SLIMES;
+                otherSide = Side.SLIMES;
                 break;
+            }
+            if (ai) {
+                aiTurn = 3.0f;
+                hovering = -1;
+            } else {
+                playerSide = otherSide;
             }
         } else {
             SFX.UHUH.play();
