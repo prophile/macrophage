@@ -50,6 +50,8 @@ public class MenuMode implements GameMode {
 
     @Override
     public void mouseClick(int x, int y) {
+        if (advance)
+            return;
         advance = true;
         SFX.CLICK.play();
     }

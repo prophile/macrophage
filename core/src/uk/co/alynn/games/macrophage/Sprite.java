@@ -20,4 +20,8 @@ public enum Sprite {
         batch.setColor(r, g, b, 1.0f);
         batch.draw(tex, x - tex.getWidth()/2, y - tex.getHeight()/2);
     }
+
+    public void draw(SpriteBatch spriteBatch, float x, float y) {
+        draw(spriteBatch, x, y, 1.0f, 1.0f, 1.0f);
+    }
 }
