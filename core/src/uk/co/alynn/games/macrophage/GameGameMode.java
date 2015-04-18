@@ -95,41 +95,7 @@ public class GameGameMode implements GameMode {
 
     @Override
     public void activate() {
-
-        final int GRID_WIDTH = 8;
-        final int GRID_HEIGHT = 5;
-
-        sim = new Simulation(GRID_WIDTH*GRID_HEIGHT);
-
-        final float xfactor = 1024.0f / (GRID_WIDTH + 1);
-        final float yfactor = 640.0f / (GRID_HEIGHT + 1);
-
-        for (int y = 0; y < GRID_HEIGHT; ++y) {
-            for (int x = 0; x < GRID_WIDTH; ++x) {
-                int ix = (GRID_WIDTH*y) + x;
-                sim.setNodeX(ix, xfactor + xfactor*x);
-                sim.setNodeY(ix, yfactor + yfactor*y);
-                if (x - 1 >= 0) {
-                    sim.setLink(ix, 0, ix - 1);
-                }
-                if (x + 1 < GRID_WIDTH) {
-                    sim.setLink(ix, 1, ix + 1);
-                }
-                if (y - 1 >= 0) {
-                    sim.setLink(ix, 2, ix - GRID_WIDTH);
-                }
-                if (y + 1 < GRID_HEIGHT) {
-                    sim.setLink(ix, 3, ix + GRID_WIDTH);
-                }
-            }
-        }
-
-        sim.setSide(0, Side.SLIMES);
-        sim.setSide(1, Side.SLIMES);
-        sim.setSide(GRID_WIDTH*GRID_HEIGHT - 2, Side.VIRUSES);
-        sim.setSide(GRID_WIDTH*GRID_HEIGHT - 1, Side.VIRUSES);
-
-        sim.tickSimulation();
+        sim = Levels.sketchedLevel();
     }
 
     @Override
