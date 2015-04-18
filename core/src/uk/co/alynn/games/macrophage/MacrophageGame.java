@@ -2,13 +2,15 @@ package uk.co.alynn.games.macrophage;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
-public class MacrophageGame extends ApplicationAdapter {
+public class MacrophageGame extends ApplicationAdapter implements InputProcessor {
     SpriteBatch batch;
     ShapeRenderer renderer;
     GameMode mode;
@@ -17,6 +19,7 @@ public class MacrophageGame extends ApplicationAdapter {
     @Override
     public void create () {
         Overlord.init();
+        Gdx.input.setInputProcessor(this);
         batch = new SpriteBatch();
         renderer = new ShapeRenderer();
         mode = new LoadingMode();
@@ -39,8 +42,61 @@ public class MacrophageGame extends ApplicationAdapter {
         mode.render(batch, renderer);
     }
 
+    private int lastMouseXWS = 512;
+    private int lastMouseYWS = 320;
+
     @Override
     public void resize(int width, int height) {
         viewport.update(width, height, true);
+    }
+
+    @Override
+    public boolean keyDown(int keycode) {
+        return false;
+    }
+
+    @Override
+    public boolean keyUp(int keycode) {
+        return false;
+    }
+
+    @Override
+    public boolean keyTyped(char character) {
+        return false;
+    }
+
+    @Override
+    public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+        mouseMoved(screenX, screenY);
+        mode.mouseClick(lastMouseXWS, lastMouseYWS);
+        return true;
+    }
+
+    @Override
+    public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+        return false;
+    }
+
+    @Override
+    public boolean touchDragged(int screenX, int screenY, int pointer) {
+        return false;
+    }
+
+    private final Vector2 projectionVector = new Vector2();
+
+    @Override
+    public boolean mouseMoved(int screenX, int screenY) {
+        projectionVector.x = screenX;
+        projectionVector.y = (Gdx.graphics.getHeight() - screenY) - 1;
+        Vector2 projected = viewport.unproject(projectionVector);
+        lastMouseXWS = (int)projected.x;
+        lastMouseYWS = (int)projected.y;
+        mode.mouseMove(lastMouseXWS, lastMouseYWS);
+        return true;
+    }
+
+    @Override
+    public boolean scrolled(int amount) {
+        return false;
     }
 }
