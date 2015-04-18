@@ -8,13 +8,10 @@ public final class Simulation {
     private boolean didBirthSlime;
     private final boolean isSoftCopy;
 
-    public float userdata;
-
     private Simulation(Simulation source) {
         positions = source.positions;
         states = new int[source.states.length];
         System.arraycopy(source.states, 0, states, 0, states.length);
-        userdata = source.userdata;
         isSoftCopy = true;
     }
 
