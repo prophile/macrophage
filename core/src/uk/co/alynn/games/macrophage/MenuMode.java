@@ -37,7 +37,6 @@ public class MenuMode implements GameMode {
 
     @Override
     public void activate() {
-        SFX.SELECT.play();
     }
 
     @Override

@@ -3,12 +3,14 @@ package uk.co.alynn.games.macrophage;
 public final class Simulation {
     private final float[] positions;
     private final int[] states;
+    private boolean didBirthVirus;
+    private boolean didBirthSlime;
 
     public Simulation(int nodes) {
         positions = new float[nodes*2];
         states = new int[nodes];
         for (int i = 0; i < nodes; ++i) {
-            states[i] = 0;
+            states[i] = 1073741820;
             positions[2*i] = 0.0f;
             positions[2*i + 1] = 0.0f;
         }
@@ -76,8 +78,92 @@ public final class Simulation {
         return false;
     }
 
-    @SuppressWarnings("static-method")
-    public boolean isValidMode(int nodeA, int nodeB) {
+    public boolean isValidMove(int nodeA, int nodeB) {
+        return (nodeA != nodeB) && isConnected(nodeA, nodeB);
+    }
+
+    private boolean isConnected(int nodeA, int nodeB) {
+        for (int i = 0; i < 4; ++i) {
+            if (getLink(nodeA, i) == nodeB)
+                return true;
+        }
         return false;
+    }
+
+    public void performMove(int source, int dest) {
+        if (!isValidMove(source, dest)) {
+            throw new AssertionError("not a valid move!");
+        }
+        if (isOccupied(dest)) {
+            switch (getSide(dest)) {
+            case SLIMES:
+                SFX.SLIME_DEATH.play();
+                break;
+            case VIRUSES:
+                SFX.VIRUS_DEATH.play();
+                break;
+            }
+        } else {
+            switch (getSide(source)) {
+            case SLIMES:
+                SFX.SLIME_MOVE.play();
+                break;
+            case VIRUSES:
+                SFX.VIRUS_MOVE.play();
+                break;
+            }
+        }
+        setSide(dest, getSide(source));
+        clearOccupation(source);
+        // drive the automatic updates
+        tickSimulation();
+    }
+
+    public void tickSimulation() {
+        didBirthVirus = false;
+        didBirthSlime = false;
+        while (runOneTick());
+        if (didBirthVirus)
+            SFX.VIRUS_BIRTH.play();
+        if (didBirthSlime)
+            SFX.SLIME_BIRTH.play();
+    }
+
+    private boolean runOneTick() {
+        boolean anyChanges = false;
+        for (int i = 0; i < nodeCount(); ++i) {
+            Side surrounders = getSurrounder(i);
+            if (surrounders != null) {
+                if (!isOccupied(i) || getSide(i) != surrounders) {
+                    setSide(i, surrounders);
+                    anyChanges = true;
+                    switch (surrounders) {
+                    case SLIMES:
+                        didBirthSlime = true;
+                        break;
+                    case VIRUSES:
+                        didBirthVirus = true;
+                        break;
+                    }
+                }
+            }
+        }
+        return anyChanges;
+    }
+
+    private Side getSurrounder(int i) {
+        Side lastSeenSide = null;
+        for (int j = 0; j < 4; ++j) {
+            int link = getLink(i, j);
+            if (link == -1)
+                continue;
+            if (!isOccupied(link))
+                return null;
+            Side linkSide = getSide(link);
+            if (lastSeenSide != null && linkSide != lastSeenSide)
+                return null;
+            lastSeenSide = linkSide;
+        }
+        return lastSeenSide;
     }
 }

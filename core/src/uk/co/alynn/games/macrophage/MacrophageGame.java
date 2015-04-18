@@ -87,7 +87,7 @@ public class MacrophageGame extends ApplicationAdapter implements InputProcessor
     @Override
     public boolean mouseMoved(int screenX, int screenY) {
         projectionVector.x = screenX;
-        projectionVector.y = (Gdx.graphics.getHeight() - screenY) - 1;
+        projectionVector.y = screenY;
         Vector2 projected = viewport.unproject(projectionVector);
         lastMouseXWS = (int)projected.x;
         lastMouseYWS = (int)projected.y;
