@@ -1,0 +1,8 @@
+dependencies:
+  override:
+    - gradle deps
+test:
+  override:
+    - gradle dist
+  post:
+    - cp desktop/build/libs/desktop-1.0.jar $CIRCLE_ARTIFACTS/macrophage.jar
